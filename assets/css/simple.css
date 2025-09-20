@@ -166,6 +166,52 @@ body {
     image-rendering: crisp-edges;
 }
 
+/* Lazy loading styles */
+.lazy-image {
+    opacity: 0;
+    transition: opacity 0.4s ease;
+    background: linear-gradient(90deg, #f0f0f0 25%, #e0e0e0 50%, #f0f0f0 75%);
+    background-size: 200% 100%;
+    animation: loading 1.5s infinite;
+}
+
+/* Fallback for when JavaScript is disabled */
+.no-js .lazy-image {
+    opacity: 1;
+    background: none;
+    animation: none;
+}
+
+.lazy-image.loaded {
+    opacity: 1;
+}
+
+.lazy-image.error {
+    opacity: 1;
+    background: linear-gradient(45deg, #f0f0f0, #e0e0e0);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: #666;
+    font-size: 14px;
+}
+
+/* Loading placeholder */
+.lazy-image:not(.loaded):not(.error) {
+    background: linear-gradient(90deg, #f0f0f0 25%, #e0e0e0 50%, #f0f0f0 75%);
+    background-size: 200% 100%;
+    animation: loading 1.5s infinite;
+}
+
+@keyframes loading {
+    0% {
+        background-position: 200% 0;
+    }
+    100% {
+        background-position: -200% 0;
+    }
+}
+
 /* Image hover effects removed */
 
 .item.thumb .image {

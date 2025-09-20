@@ -2,6 +2,15 @@
 
 document.addEventListener('DOMContentLoaded', function() {
     
+    // Remove no-js class to enable JavaScript features
+    document.body.classList.remove('no-js');
+    
+    // Add placeholder src to images that only have data-src
+    const imagesWithDataSrc = document.querySelectorAll('img[data-src]:not([src])');
+    imagesWithDataSrc.forEach(img => {
+        img.src = 'data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMzAwIiBoZWlnaHQ9IjIwMCIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48cmVjdCB3aWR0aD0iMTAwJSIgaGVpZ2h0PSIxMDAlIiBmaWxsPSIjZjBmMGYwIi8+PHRleHQgeD0iNTAlIiB5PSI1MCUiIGZvbnQtZmFtaWx5PSJBcmlhbCIgZm9udC1zaXplPSIxNCIgZmlsbD0iIzk5OSIgdGV4dC1hbmNob3I9Im1pZGRsZSIgZHk9Ii4zZW0iPkxvYWRpbmcuLi48L3RleHQ+PC9zdmc+';
+    });
+    
     // Remove preload class to trigger animations
     setTimeout(() => {
         document.body.classList.remove('is-preload');
@@ -42,7 +51,7 @@ function openLightbox(imageSrc, currentIndex, allItems) {
             <button class="lightbox-close">&times;</button>
             <button class="lightbox-next">&#8249;</button>
             <button class="lightbox-prev">&#8250;</button>
-            <img src="${imageSrc}" alt="Gallery Image" class="lightbox-image">
+            <img src="${imageSrc}" alt="Gallery Image" class="lightbox-image" loading="eager">
             <div class="lightbox-counter">${currentIndex + 1} / ${allItems.length}</div>
         </div>
     `;
@@ -362,51 +371,131 @@ function initKeyboardNavigation() {
     });
 }
 
-// Lazy loading for images with better performance
+// Enhanced lazy loading for images with better performance
 function initLazyLoading() {
     // Check if IntersectionObserver is supported
     if (!('IntersectionObserver' in window)) {
-        // Fallback for older browsers
-        const images = document.querySelectorAll('.item.thumb img');
+        // Fallback for older browsers - load all images immediately
+        const images = document.querySelectorAll('.lazy-image');
         images.forEach(img => {
-            img.style.opacity = '1';
+            if (img.dataset.src) {
+                img.src = img.dataset.src;
+                img.style.opacity = '1';
+                img.classList.add('loaded');
+            }
         });
         return;
     }
     
-    const images = document.querySelectorAll('.item.thumb img');
+    // Also handle images without data-src (fallback)
+    const imagesWithoutDataSrc = document.querySelectorAll('img:not([data-src])');
+    imagesWithoutDataSrc.forEach(img => {
+        img.style.opacity = '1';
+        img.classList.add('loaded');
+    });
+    
+    // Handle images that already have src attribute
+    const imagesWithSrc = document.querySelectorAll('img[src]');
+    imagesWithSrc.forEach(img => {
+        img.style.opacity = '1';
+        img.classList.add('loaded');
+    });
+    
+    // Handle images that have data-src but no src (lazy images)
+    const lazyImages = document.querySelectorAll('img[data-src]:not([src])');
+    lazyImages.forEach(img => {
+        img.style.opacity = '0';
+        img.classList.add('lazy-image');
+    });
+    
+    const images = document.querySelectorAll('.lazy-image');
+    
+    // If no lazy images found, show all images immediately
+    if (images.length === 0) {
+        const allImages = document.querySelectorAll('img');
+        allImages.forEach(img => {
+            img.style.opacity = '1';
+            img.classList.add('loaded');
+        });
+        return;
+    }
+    
+    // Add a timeout to show images if lazy loading fails
+    setTimeout(() => {
+        const stillHiddenImages = document.querySelectorAll('.lazy-image:not(.loaded)');
+        stillHiddenImages.forEach(img => {
+            if (img.dataset.src) {
+                img.src = img.dataset.src;
+                img.style.opacity = '1';
+                img.classList.add('loaded');
+            }
+        });
+    }, 2000);
     
     const imageObserver = new IntersectionObserver((entries, observer) => {
         entries.forEach(entry => {
             if (entry.isIntersecting) {
                 const img = entry.target;
                 
-                // Add loading placeholder with better performance
-                img.style.opacity = '0';
-                img.style.transition = 'opacity 0.3s ease';
-                
-                // Preload image for better performance
-                const preloadImg = new Image();
-                preloadImg.onload = () => {
-                    img.style.opacity = '1';
-                    img.style.transform = 'scale(1)';
-                };
-                preloadImg.onerror = () => {
-                    img.style.opacity = '1';
-                    img.alt = 'خطأ في تحميل الصورة';
-                };
-                preloadImg.src = img.src;
+                // Load the actual image
+                if (img.dataset.src) {
+                    const preloadImg = new Image();
+                    preloadImg.onload = () => {
+                        img.src = img.dataset.src;
+                        img.style.opacity = '1';
+                        img.classList.add('loaded');
+                    };
+                    preloadImg.onerror = () => {
+                        img.style.opacity = '1';
+                        img.alt = 'خطأ في تحميل الصورة';
+                        img.classList.add('error');
+                    };
+                    preloadImg.src = img.dataset.src;
+                }
                 
                 observer.unobserve(img);
             }
         });
     }, {
-        rootMargin: '100px 0px',
+        rootMargin: '150px 0px',
         threshold: 0.01
     });
     
     images.forEach(img => {
         imageObserver.observe(img);
+    });
+    
+    // Preload adjacent images for better UX
+    preloadAdjacentImages();
+    
+    // Fallback: show all images after 3 seconds if lazy loading fails
+    setTimeout(() => {
+        const stillHiddenImages = document.querySelectorAll('.lazy-image:not(.loaded)');
+        stillHiddenImages.forEach(img => {
+            if (img.dataset.src) {
+                img.src = img.dataset.src;
+                img.style.opacity = '1';
+                img.classList.add('loaded');
+            }
+        });
+    }, 3000);
+}
+
+// Preload adjacent images for smoother navigation
+function preloadAdjacentImages() {
+    const images = document.querySelectorAll('.lazy-image');
+    
+    images.forEach((img, index) => {
+        if (img.dataset.src) {
+            // Preload next 2 images
+            for (let i = 1; i <= 2; i++) {
+                const nextIndex = index + i;
+                if (nextIndex < images.length && images[nextIndex].dataset.src) {
+                    const preloadImg = new Image();
+                    preloadImg.src = images[nextIndex].dataset.src;
+                }
+            }
+        }
     });
 }
 
