@@ -40,8 +40,8 @@ function openLightbox(imageSrc, currentIndex, allItems) {
     lightbox.innerHTML = `
         <div class="lightbox-content">
             <button class="lightbox-close">&times;</button>
-            <button class="lightbox-prev">&#8249;</button>
-            <button class="lightbox-next">&#8250;</button>
+            <button class="lightbox-next">&#8249;</button>
+            <button class="lightbox-prev">&#8250;</button>
             <img src="${imageSrc}" alt="Gallery Image" class="lightbox-image">
             <div class="lightbox-counter">${currentIndex + 1} / ${allItems.length}</div>
         </div>
@@ -110,8 +110,8 @@ function openLightbox(imageSrc, currentIndex, allItems) {
             background: rgba(0, 0, 0, 0.7);
         }
         
-        .lightbox-prev,
-        .lightbox-next {
+        .lightbox-next,
+        .lightbox-prev {
             position: absolute;
             top: 50%;
             transform: translateY(-50%);
@@ -131,16 +131,16 @@ function openLightbox(imageSrc, currentIndex, allItems) {
             z-index: 10001;
         }
         
-        .lightbox-prev {
-            left: 20px;
-        }
-        
         .lightbox-next {
             right: 20px;
         }
         
-        .lightbox-prev:hover,
-        .lightbox-next:hover {
+        .lightbox-prev {
+            left: 20px;
+        }
+        
+        .lightbox-next:hover,
+        .lightbox-prev:hover {
             background: rgba(0, 0, 0, 0.7);
         }
         
@@ -159,20 +159,20 @@ function openLightbox(imageSrc, currentIndex, allItems) {
         }
         
         @media (max-width: 768px) {
-            .lightbox-prev,
-            .lightbox-next {
+            .lightbox-next,
+            .lightbox-prev {
                 width: 50px;
                 height: 50px;
                 font-size: 20px;
                 padding: 10px;
             }
             
-            .lightbox-prev {
-                left: 10px;
-            }
-            
             .lightbox-next {
                 right: 10px;
+            }
+            
+            .lightbox-prev {
+                left: 10px;
             }
             
             .lightbox-close {
@@ -201,8 +201,8 @@ function openLightbox(imageSrc, currentIndex, allItems) {
     
     // Close lightbox functionality
     const closeBtn = lightbox.querySelector('.lightbox-close');
-    const prevBtn = lightbox.querySelector('.lightbox-prev');
-    const nextBtn = lightbox.querySelector('.lightbox-next');
+    const prevBtn = lightbox.querySelector('.lightbox-next');
+    const nextBtn = lightbox.querySelector('.lightbox-prev');
     
     closeBtn.addEventListener('click', () => closeLightbox(lightbox));
     lightbox.addEventListener('click', (e) => {
@@ -233,10 +233,10 @@ function openLightbox(imageSrc, currentIndex, allItems) {
                 closeLightbox(lightbox);
                 break;
             case 'ArrowLeft':
-                prevBtn.click();
+                nextBtn.click();
                 break;
             case 'ArrowRight':
-                nextBtn.click();
+                prevBtn.click();
                 break;
         }
     };
@@ -321,13 +321,13 @@ function createScrollZones() {
     
     leftZone.addEventListener('mouseenter', () => {
         scrollInterval = setInterval(() => {
-            window.scrollBy(-20, 0);
+            window.scrollBy(20, 0);
         }, 16);
     });
     
     rightZone.addEventListener('mouseenter', () => {
         scrollInterval = setInterval(() => {
-            window.scrollBy(20, 0);
+            window.scrollBy(-20, 0);
         }, 16);
     });
     
@@ -344,11 +344,11 @@ function initKeyboardNavigation() {
         switch(e.key) {
             case 'ArrowLeft':
                 e.preventDefault();
-                window.scrollBy(-100, 0);
+                window.scrollBy(100, 0);
                 break;
             case 'ArrowRight':
                 e.preventDefault();
-                window.scrollBy(100, 0);
+                window.scrollBy(-100, 0);
                 break;
             case 'Home':
                 e.preventDefault();
